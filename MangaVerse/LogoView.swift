@@ -14,7 +14,6 @@ struct LogoView: View {
                 .resizable()
                 .frame(width: 130, height: 110)
                 .scaledToFit() // Чтобы изображение сохраняло пропорции
-                .frame(width: 130, height: 110)
                 .shadow(color: .gray.opacity(0.5), radius: 10, x: 0, y: 5)
             Text("MANGAVERSE")
                 .foregroundColor(.blue)
