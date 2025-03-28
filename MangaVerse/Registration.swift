@@ -61,6 +61,29 @@ struct Registered: View {
                         Auth.auth().createUser(withEmail: email, password: password) { result, error in
                             if let user = result?.user {
                                 self.currentUser = User(name: name, email: user.email ?? "", password: "", avatar: "default" )
+                                if let uid = result?.user.uid {
+                                    result?.user.sendEmailVerification() { error in
+                                        if let error = error {
+                                            print("Error sending confirmation email")
+                                            
+                                        } else {
+                                            print("Email sent successfully")
+                                        }
+                                    }
+                                    Firestore.firestore()
+                                        .collection("users")
+                                        .document(uid)
+                                        .setData([
+                                            "name": name,
+                                            "email": email,
+                                            "password": password,
+                                            "isValid": false
+                                        ], merge: true)
+                                    isLoggedIn = true
+                                    dismiss()
+                                } else {
+                                    print(error?.localizedDescription ?? "Unknown error")
+                                }
                             }
                         }
                     }
