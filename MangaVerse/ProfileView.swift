@@ -6,7 +6,6 @@ struct ProfileView: View {
     let user: User
 
     var body: some View {
-        
             VStack(alignment: .center, spacing: 20) {
                 Image(systemName: "person.circle")
                     .resizable()

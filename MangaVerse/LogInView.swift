@@ -50,9 +50,12 @@ struct LogInView: View {
                     VStack {
                         Button("Sign In") {
                             Auth.auth().signIn(withEmail: email, password: password) { result, error in
+                                print("Sign in result: \(String(describing: result))")
+                                print("Sign in error: \(String(describing: error))")
                                 if let user = result?.user {
                                     self.currentUser = User(name: "name", email: user.email ?? "", password: "", avatar: "")
                                     isLoggedIn = true
+                                    print("After sign in - isLoggedIn: \(isLoggedIn), currentUser: \(String(describing: self.currentUser))")
                                 }else if let error = error {
                                     print("Error: \(error.localizedDescription)")
                                 }

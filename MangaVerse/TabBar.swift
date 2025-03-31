@@ -10,31 +10,42 @@ import SwiftUI
 struct TabBar: View {
     var body: some View {
         TabView {
-            MainPage()
+            NavigationStack {
+                MainPage()
+            }
                 .tabItem {
                     Image(systemName: "house")
                     Text("Main")
                 }
-            MainPage() // тут будет поиск
+            NavigationStack {
+                MainPage()
+            } // тут будет поиск
                 .tabItem {
                     Image(systemName: "magnifyingglass")
                     Text("Search")
                 }
-            MainPage() // downloads
+            NavigationStack {
+                MainPage()
+            } // downloads
                 .tabItem {
                     Image(systemName: "arrow.down")
                     Text("Downloads")
                 }
-            MainPage() // Notifications
+            NavigationStack {
+                MainPage()
+            }// Notifications
                 .tabItem {
                     Image(systemName: "bell")
                     Text("Notifications")
                 }
-            ProfileView(user: User())
-                .tabItem {
-                    Image(systemName: "person")
-                    Text("Profile")
-                }
+            NavigationStack {
+                ProfileView(user: User())
+            }
+                    .tabItem {
+                        Image(systemName: "person")
+                        Text("Profile")
+                    }
+            
         }.accentColor(.blue)
     }
 }

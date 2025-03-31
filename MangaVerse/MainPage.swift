@@ -12,7 +12,7 @@ struct MainPage: View {
     @State private var errorMessage: String?
 
     var body: some View {
-        NavigationView {
+        
             if let errorMessage = errorMessage {
                 Text("Error: \(errorMessage)")
                     .foregroundColor(.red)
@@ -54,7 +54,7 @@ struct MainPage: View {
             }
         }
     }
-}
+
 
 struct MainPage_Previews: PreviewProvider {
     static var previews: some View {
