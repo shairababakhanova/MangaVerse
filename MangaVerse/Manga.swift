@@ -9,6 +9,7 @@ import Foundation
 struct Manga: Identifiable, Codable {
     let id: String
     let title: String
+    var coverURL: URL?
     var localPath: String?
     var isDownloaded: Bool
 }
