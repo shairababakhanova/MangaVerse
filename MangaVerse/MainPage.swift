@@ -10,8 +10,20 @@ import SwiftUI
 struct MainPage: View {
     @State private var mangaList: [Manga] = []
     @State private var errorMessage: String?
+    @State private var selectedCategory: MangaCategory = .recomendations
 
     var body: some View {
+            VStack{
+                Picker("Category", selection: $selectedCategory) {
+                    Text("Recomendations").tag(MangaCategory.recomendations)
+                    Text("Popular").tag(MangaCategory.popular)
+                    Text("New").tag(MangaCategory.new)
+                    
+                        
+                }
+            }.pickerStyle(.segmented)
+            .padding()
+        
         
             if let errorMessage = errorMessage {
                 Text("Error: \(errorMessage)")
@@ -42,10 +54,12 @@ struct MainPage: View {
                             .padding(.leading, 8)
                     }
                 }
-                .navigationTitle("Recommendation")
-                .task {
+                .navigationTitle("Manga")
+                
+                .task(id: selectedCategory) {
                     do {
-                        let mangas = try await MangaDexService.shared.fetchData()
+                        mangaList = []
+                        let mangas = try await MangaDexService.shared.fetchData(for: selectedCategory)
                         mangaList = mangas
                     } catch {
                         errorMessage = error.localizedDescription

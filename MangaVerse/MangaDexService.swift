@@ -22,7 +22,7 @@ struct MangaDexManga: Codable {
               let fileName = coverRelationship.attributes?.fileName else {
             return nil
         }
-        let urlString = "https://uploads.mangadex.org/covers/\(id)/\(fileName).\(size).jpg"
+        var urlString = "https://uploads.mangadex.org/covers/\(id)/\(fileName).\(size).jpg"
         return URL(string: urlString)
     }
     
@@ -45,27 +45,53 @@ struct RelationshipAttributes: Codable {
     
 }
  
+enum MangaCategory: String {
+    case new = "new"
+    case popular = "popular"
+    case recomendations = "recomendations"
+}
 
 
 class MangaDexService {
     static let shared = MangaDexService(); private init() {}
     
-    private func createURL() -> URL? {
-        let urlStr = "https://api.mangadex.org/manga?limit=20&includes[]=cover_art"
+    private func createURL(for category: MangaCategory) -> URL? {
+        var urlStr = "https://api.mangadex.org/manga?limit=20&includes[]=cover_art"
+        switch category {
+        case .new:
+            urlStr += "&order[createdAt]=desc"
+        case .popular:
+            urlStr += "&order[followedCount]=desc"
+        case .recomendations:
+            urlStr += "&order[rating]=desc"
+            
+        }
         let url = URL(string: urlStr)
         return url
     }
   
     
     
-    func fetchData() async throws -> [Manga] {
-        guard let url = createURL() else {
+    func fetchData(for category: MangaCategory) async throws -> [Manga] {
+        guard let url = createURL(for: category) else {
             throw MangaDexError.invalidURL
         }
-        let (data, _)  = try await URLSession.shared.data(from: url)
+        let (data, response)  = try await URLSession.shared.data(from: url)
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+                // Выводим сырые данные для отладки
+                if let errorString = String(data: data, encoding: .utf8) {
+                    print("API Error Response: \(errorString)")
+                }
+            let errorResponse = try JSONDecoder().decode(MangaDexErrorResponse.self, from: data)
+                    throw MangaDexError.apiError(errorResponse.errors.first?.detail ?? "Unknown error")
+                }
+
+                // Выводим сырые данные для отладки
+                if let responseString = String(data: data, encoding: .utf8) {
+                    print("API Response: \(responseString)")
+                }
         
-        
-        
+        print("Fetching data for category \(category.rawValue) with URL: \(url)")
         let mangaResponse = try JSONDecoder().decode(MangaDexResponse.self, from: data)
         print("Relationships for first manga: \(mangaResponse.data.first?.relationships ?? [])")
         
@@ -94,6 +120,17 @@ class MangaDexService {
 enum MangaDexError: Error {
     case invalidURL
     case apiError(String)
+}
+struct MangaDexErrorResponse: Codable {
+    let result: String
+    let errors: [MangaDexErrorDetail]
+}
+struct MangaDexErrorDetail: Codable {
+    let id: String
+    let status: Int
+    let title: String
+    let detail: String
+    let context: String?
 }
 
     
