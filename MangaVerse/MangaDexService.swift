@@ -133,5 +133,72 @@ struct MangaDexErrorDetail: Codable {
     let context: String?
 }
 
+struct ChapterResponse: Codable {
+    let result: String
+    let response: String
+    let data: [Chapter]
+}
+struct Chapter: Codable, Hashable {
+    let id: String
+    let attributes: ChapterAttributes
+}
+struct ChapterAttributes: Codable, Hashable {
+    let chapter: String?
+    let title: String?
+    let translatedLanguage: String
+}
+
+struct AtHomeResponse: Codable {
+    let baseUrl: String
+    let chapter: ChapterData
+}
+
+struct ChapterData: Codable {
+    let hash: String
+    let data: [String]
+}
+
+extension MangaDexService {
+    func fetchChapters(forMangaId mangaId: String) async throws -> [Chapter] {
+        let urlStr = "https://api.mangadex.org/chapter?manga=\(mangaId)&limit=10&translatedLanguage[]=en"
+        guard let url = URL(string: urlStr) else {
+            throw MangaDexError.invalidURL
+        }
+        print("Fetching chapters with URL: \(url)")
+        let (data, response) = try await URLSession.shared.data(from: url)
+        
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200  else {
+            if let errorString = String(data: data, encoding: .utf8) {
+                print("API Error Response: \(errorString)")
+            }
+            let errorResponse = try JSONDecoder().decode(MangaDexErrorResponse.self, from: data)
+            throw MangaDexError.apiError(errorResponse.errors.first?.detail ?? "Unknown error")
+        }
+        if let responseString = String(data: data, encoding: .utf8) {
+            print("API Response (fetchChapters): \(responseString)")
+        }
+        
+        let chapterResponse = try JSONDecoder().decode(ChapterResponse.self, from: data)
+        print("Fetched \(chapterResponse.data.count) chapters")
+        return chapterResponse.data
+    }
     
+    func fetchChapterPages(forChapterId chapterId: String) async throws -> (baseUrl: String, pages: [String]) {
+        let urlStr = "https://api.mangadex.org/at-home/server/\(chapterId)"
+        guard let url = URL(string: urlStr) else {
+            throw MangaDexError.invalidURL
+        }
+        print("Fetching chapter pages with URL: \(url)")
+        let (data, response) = try await URLSession.shared.data(from: url)
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+                    if let errorString = String(data: data, encoding: .utf8) {
+                        print("API Error Response: \(errorString)")
+                    }
+                    let errorResponse = try JSONDecoder().decode(MangaDexErrorResponse.self, from: data)
+                    throw MangaDexError.apiError(errorResponse.errors.first?.detail ?? "Unknown error")
+                }
+        let atHomeResponse = try JSONDecoder().decode(AtHomeResponse.self, from: data)
+        return (baseUrl: atHomeResponse.baseUrl, pages: atHomeResponse.chapter.data)
+    }
+}
 
