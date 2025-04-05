@@ -250,4 +250,49 @@ extension MangaDexService {
     }
     
 }
+extension MangaDexService {
+    func searchManga(request: String) async throws -> [Manga] {
+        guard !request.isEmpty else {
+            return []
+        }
+        let encodedRequest = request.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? request
+        let urlString = "https://api.mangadex.org/manga?includes[]=cover_art&title=\(encodedRequest)"
+        
+        guard let url = URL(string: urlString) else {
+            throw MangaDexError.invalidURL
+        }
+        print("Search manga with url: \(url)")
+        let (data, response) = try await URLSession.shared.data(from: url)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw MangaDexError.apiError("No HTTP response recieved")
+        }
+        guard httpResponse.statusCode == 200 else {
+            if let errorString = String(data: data, encoding: .utf8) {
+                print("API Error Response (searchManga): \(errorString)")
+            }
+            let errorResponse = try JSONDecoder().decode(MangaDexErrorResponse.self, from: data)
+            throw MangaDexError.apiError(errorResponse.errors.first?.detail ?? "Unknown error (status: \(httpResponse.statusCode)")
+        }
+        if let responseString = String(data: data, encoding: .utf8) {
+            print("API Response (searchManga): \(responseString)")
+        }
+        let mangaResponse = try JSONDecoder().decode(MangaDexResponse.self, from: data)
+        var mangas: [Manga] = []
+        for manga in mangaResponse.data {
+            let coverURL: URL? = manga.coverURL()
+            mangas.append(
+                Manga(
+                    id: manga.id,
+                    title: manga.attributes.title["en"] ?? "Unknown",
+                    coverURL: coverURL,
+                    localPath: nil,
+                    isDownloaded: false
+                )
+            )
+        }
+        return mangas
+        
+    }
+}
 
