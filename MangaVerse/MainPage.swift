@@ -30,7 +30,7 @@ struct MainPage: View {
                     .foregroundColor(.red)
             } else {
                 List(mangaList) { manga in
-                    NavigationLink(destination: ReaderView(mangaId: manga.id, mangaTitle: manga.title)) {
+                    NavigationLink(destination: MangaDetailView(mangaId: manga.id, mangaTitle: manga.title, coverURL: manga.coverURL)) {
                         HStack {
                             if let coverURL = manga.coverURL {
                                 AsyncImage(url: coverURL) { image in
