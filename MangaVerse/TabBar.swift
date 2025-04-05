@@ -1,54 +1,78 @@
-//
-//  TabBar.swift
-//  MangaVerse
-//
-//  Created by Бабаханова Шаира on 28.03.2025.
-//
-
 import SwiftUI
 
 struct TabBar: View {
+    @State private var showSearchModal: Bool = false
+    @State private var selectedTab: Int = 0
+    
+
     var body: some View {
-        TabView {
+        TabView(selection: $selectedTab) {
             NavigationStack {
                 MainPage()
             }
-                .tabItem {
-                    Image(systemName: "house")
-                    Text("Main")
-                }
-            NavigationStack {
-                MainPage()
-            } // тут будет поиск
+            .tabItem {
+                Image(systemName: "house")
+                Text("Main")
+            }
+            .tag(0)
+
+            Text("")
                 .tabItem {
                     Image(systemName: "magnifyingglass")
                     Text("Search")
                 }
+                .tag(1)
+
+            // Вкладка "Downloads"
             NavigationStack {
-                MainPage()
-            } // downloads
-                .tabItem {
-                    Image(systemName: "arrow.down")
-                    Text("Downloads")
-                }
+                Text("Downloads View Coming Soon")
+                    .font(.title)
+                    .foregroundColor(.gray)
+            }
+            .tabItem {
+                Image(systemName: "arrow.down")
+                Text("Downloads")
+            }
+            .tag(2)
+
+            // Вкладка "Notifications"
             NavigationStack {
-                MainPage()
-            }// Notifications
-                .tabItem {
-                    Image(systemName: "bell")
-                    Text("Notifications")
-                }
+                Text("Notifications View Coming Soon")
+                    .font(.title)
+                    .foregroundColor(.gray)
+            }
+            .tabItem {
+                Image(systemName: "bell")
+                Text("Notifications")
+            }
+            .tag(3)
+
+            // Вкладка "Profile"
             NavigationStack {
                 ProfileView(user: User())
             }
-                    .tabItem {
-                        Image(systemName: "person")
-                        Text("Profile")
-                    }
-            
-        }.accentColor(.blue)
+            .tabItem {
+                Image(systemName: "person")
+                Text("Profile")
+            }
+            .tag(4)
+        }
+        .tint(.blue)
+        .onChange(of: selectedTab) { newTab in
+            if newTab == 1 {
+                showSearchModal = true
+                selectedTab = 0
+            }
+        }
+        .sheet(isPresented: $showSearchModal) {
+            SearchModalView(isPresented: $showSearchModal)
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+        }
     }
 }
+
+
 
 #Preview {
     TabBar()
